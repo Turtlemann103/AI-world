@@ -100,8 +100,8 @@ class WorldApp:
         self.generations.set(0)
         self.draw_world()
 
-    def step_world(self) -> None:
-        if self.running:
+    def step_world(self, *, manual: bool = True) -> None:
+        if manual and self.running:
             self.running = False
         env = Environment.random(self.rng)
         survivors = [
@@ -134,7 +134,7 @@ class WorldApp:
         if not self.running or remaining <= 0:
             self.running = False
             return
-        self.step_world()
+        self.step_world(manual=False)
         self.root.after(200, lambda: self._run_step(remaining - 1))
 
     def draw_world(self) -> None:
