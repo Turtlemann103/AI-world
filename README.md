@@ -22,4 +22,4 @@ Launch a simple Tkinter visualization where each square is a being colored by su
 python3 gui.py
 ```
 
-Use **New World** to reseed the population and **Step** to advance one generation.
+Use **New World** to reseed the population, **Step** to advance one generation, and **Run** to auto-advance by the configured number of generations.

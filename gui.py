@@ -46,7 +46,9 @@ class WorldApp:
         self.population_size = tk.IntVar(value=64)
         self.mutation_rate = tk.DoubleVar(value=0.1)
         self.mutation_strength = tk.DoubleVar(value=0.15)
+        self.auto_generations = tk.IntVar(value=10)
         self.generations = tk.IntVar(value=0)
+        self.running = False
 
         self.canvas = tk.Canvas(root, width=480, height=480, bg="#1f2933")
         self.canvas.grid(row=0, column=0, rowspan=6, padx=10, pady=10)
@@ -63,17 +65,23 @@ class WorldApp:
         tk.Label(control, text="Mutation strength").grid(row=2, column=0, sticky="w")
         tk.Entry(control, textvariable=self.mutation_strength, width=8).grid(row=2, column=1)
 
+        tk.Label(control, text="Auto generations").grid(row=3, column=0, sticky="w")
+        tk.Entry(control, textvariable=self.auto_generations, width=8).grid(row=3, column=1)
+
         self.env_label = tk.Label(control, text="Environment: --")
-        self.env_label.grid(row=3, column=0, columnspan=2, sticky="w", pady=(10, 0))
+        self.env_label.grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
         self.summary_label = tk.Label(control, text="Summary: --", justify="left")
-        self.summary_label.grid(row=4, column=0, columnspan=2, sticky="w")
+        self.summary_label.grid(row=5, column=0, columnspan=2, sticky="w")
 
         tk.Button(control, text="New World", command=self.reset_world).grid(
-            row=5, column=0, columnspan=2, sticky="ew", pady=(10, 0)
+            row=6, column=0, columnspan=2, sticky="ew", pady=(10, 0)
         )
         tk.Button(control, text="Step", command=self.step_world).grid(
-            row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0)
+            row=7, column=0, columnspan=2, sticky="ew", pady=(5, 0)
+        )
+        tk.Button(control, text="Run", command=self.run_generations).grid(
+            row=8, column=0, columnspan=2, sticky="ew", pady=(5, 0)
         )
 
         self.state = WorldState(
@@ -93,6 +101,8 @@ class WorldApp:
         self.draw_world()
 
     def step_world(self) -> None:
+        if self.running:
+            self.running = False
         env = Environment.random(self.rng)
         survivors = [
             being for being in self.state.population if self.rng.random() < fitness(being, env, self.rng)
@@ -110,6 +120,22 @@ class WorldApp:
         )
         self.generations.set(self.state.generation)
         self.draw_world()
+
+    def run_generations(self) -> None:
+        if self.running:
+            return
+        total = max(0, self.auto_generations.get())
+        if total == 0:
+            return
+        self.running = True
+        self._run_step(remaining=total)
+
+    def _run_step(self, remaining: int) -> None:
+        if not self.running or remaining <= 0:
+            self.running = False
+            return
+        self.step_world()
+        self.root.after(200, lambda: self._run_step(remaining - 1))
 
     def draw_world(self) -> None:
         self.canvas.delete("all")
